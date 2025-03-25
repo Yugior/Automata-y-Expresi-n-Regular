@@ -20,7 +20,7 @@ Seeing that our language is
 we will implement an automaton using q states, an automaton, according to Stanford University is a "abstract models of machines that perform computations on an input by moving through a series of states or configurations." (Stanford University,2004)
 
 VERSION 1.0
-![Automata evidence 1](https://github.com/Zathiald/automaton/assets/111139805/5dd46a2c-f45b-4341-9380-eff2b9601d73)
+![Automata evidence 1](Automata.png)
 
 This was my fisrt version of the automaton, in this version I was missing the looping at the end, because of it I had finite states that didn't lead to nowhere, so I had to implement that for the future automaton.
 
