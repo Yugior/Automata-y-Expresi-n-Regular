@@ -1,139 +1,101 @@
 # E1 Implementation of Lexical Analysis (Automaton and Regular Expression)
-Samir Baidon Pardo A01705403
+Horacio Villela Hernandez A01712206
 
-## Description
-The language choosen for this evidence is the math language, 
-more especiffically one in which you can have al possible combinations of abc
-although there is a catch as there are three rules to follow
+## Descripcion
+El lenguaje elegiido para la evidencia es uno matematico. a esto se refiere que se puede tener todas las posiblilidades de '0'1'2' con dos reglas claras:
 
-1. It must not have abc
-2. It must not have bba
-3. It must finish in bc
+1. Debe haber un 1 antes de un 2 siempre
+2. Debe de terminar con la secuencia '002'
 
-Seeing as we only have three letters in our language it would be better to use a 
-non-deterministic finite automaton (NFA) for this problem, as it can give us more flexibility and links
 
-## Design
+## Diseño
 
-Seeing that our language is 
-Σ = a,b,c
-we will implement an automaton using q states, an automaton, according to Stanford University is a "abstract models of machines that perform computations on an input by moving through a series of states or configurations." (Stanford University,2004)
+En una versión inicial del autómata, algunos estados no tenían transiciones que permitieran continuar el procesamiento de la cadena, lo que resultaba en estados finales sin conexión. Para corregir esto, se implementaron transiciones de bucle al final, permitiendo que el autómata pueda procesar más entradas sin quedar atrapado en estados sin salida.
 
-VERSION 1.0
+Bocetos Iniciales![Automata evidence 1](BocetosOriginales.png)
+
+Pro estas mismas limitantes, el diseño final sigue estas reglas:
+
+1. Siempre debe haber un 1 antes de un 2 en la cadena.
+
+2. La cadena debe terminar en "002" para ser aceptada.
+
+3. Se utilizan tres estados:
+
+    A. (estado inicial), que permite la recepción de ceros y espera la llegada de un 1.
+
+    B.  que indica que se ha encontrado un 1 y gestiona la aparición del 2.
+
+    C. (estado de aceptación), que solo se alcanza si la cadena termina en "002".
+
 ![Automata evidence 1](Automata.png)
 
-This was my fisrt version of the automaton, in this version I was missing the looping at the end, because of it I had finite states that didn't lead to nowhere, so I had to implement that for the future automaton.
+Al agregar bucles en el estado final y asegurar transiciones adecuadas, el autómata ahora es capaz de procesar correctamente todas las cadenas que cumplen con las reglas del lenguaje.
 
-VERSION 2.0
+El autómata funciona de la siguiente manera:
 
-![Automaton 2 0](https://github.com/Zathiald/automaton/assets/111139805/4f623609-8fb1-4641-8799-e83b8ad85a8c)
-
-This is the second iteration of the automaton, now with everything it needs in order for it to work and not have finite unconclusive states.
-
-One thing we must take into account is that because of the rules of the automaton we have some states that are not finite and loop themselves because if the sequence has one of the rules then it can't go to the end state.
-
-The automaton works in the following manner:
-
-| Starting State | Input | Final State |
-| -------------- | ------| ----------- |
-| Q0             | A     | Q1          |
-| Q0             | B     | Q4          |
-| Q0             | C     | Q0          |
-| Q1             | A     | Q1          |
-| Q1             | B     | Q2          |
-| Q1             | C     | Q0          |
-| Q2             | A     | Q1          |
-| Q2             | C     | Q3          |
-| Q3             | A     | Q3          |
-| Q3             | B     | Q3          |
-| Q3             | C     | Q3          |
-| Q4             | A     | Q1          |
-| Q4             | B     | Q5          |
-| Q4             | C     | Q7          |
-| Q5             | A     | Q6          |
-| Q5             | B     | Q4          |
-| Q5             | C     | Q7          |
-| Q6             | A     | Q6          |
-| Q6             | B     | Q6          |
-| Q6             | C     | Q6          |
-| Q7             | A     | Q1          |
-| Q7             | B     | Q4          |
-| Q7             | C     | Q0          |
+| Estado Inicial | Input | Estdo Final|
+| -------------- | ------| -----------|
+| A             | 0     | A           |
+| A             | 1     | B           |
+| B             | 0     | B           |
+| B             | 1     | B           |
+| B             | 2     | C           |
+| C             | 0     | A           |
+| C             | 1     | B           |
 
 
-For further implementation are goint to transcribe the automaton to a Regular Expression (R.E):
+Y este mismo se representa e implementa de forma exacta en esta expresion regular:
 
-<strong>^(?!.*abc)(?!.*bba).*bc$</strong>
+<strong>/^0*1(0|1)*(2(0|1)*(((0*1(0|1))|1(0|1)*)))*002$/gm</strong>
 
-## Implementation
-Now after we have made our automaton we have to translate the progress to a prolog file in order for it to be tested and modified if necessary, what we first need is to implement the relations of the states, we will put them in the next format: 
+## Implementacion
+Después de diseñar el autómata, se debe traducir su funcionamiento a un archivo en Prolog para poder probarlo y modificarlo de ser necesario.
 
-<strong>transition(initial_state,letter,next_state)</strong>
+Con esto dicho, se establecen las relaciones entre los estados usando el siguiente formato:
+<strong>move(CurrentState,NextState,Symbol)</strong>
 
-So for example on the initial state of Q0 if we ingress the letter a then we go to the state Q1, so in prolog it would look like this:
+Y después de definir todas las transiciones, debemos indicar cuál es el estado de aceptación utilizando la siguiente regla:
+<strong>accepting_state(c)</strong>
 
-<strong>transition(q0,a,q1)</strong>
+Para verificar si una cadena es aceptada, se utiliza la función parseDFA/1, que primero valida si la entrada termina en "002", y luego llama a la función recursiva parseDFAHelper/2 para recorrer la cadena símbolo por símbolo:
 
-So after stablishing all the states we need for prolog to now which is an accepting state, we will create a function called final_state in which we stablish that if it is on the state, then it is true
-<strong>final_state(q7)</strong>
+<strong>parseDFA(InputList) :-
+    append(_, [0, 0, 2], InputList),
+    parseDFAHelper(InputList, a)</strong>
 
-Now we create a function to check in order for it to check the automaton, we are going to use a head recursion because we want to go from the beggining all the way to the base case which is our final state, so we will start by creating the base case for our function which we will call automatonCheck
-<strong>automatonCheck([], InitialState) :-
-    final_state(InitialState).)</strong>
+En el caso base; si la lista está vacía, verificamos si el estado actual es de aceptación e imprimimos <strong>"Accepted</strong>
+
+<strong>parseDFAHelper([], CurrentState) :-
+    accepting_state(CurrentState),
+    write('Accepted'), nl.
     
-On this base case we will take a list and the starting state for the cycle, now for the recurssion we need to recover the automaton again and then check with the new state as the initial, so we plant it like this
+Por otro lado en el caso de rechazo inmediato; si no existe una transición válida desde el estado actual con el símbolo dado, se rechaza la cadena.
 
-<strong>automatonCheck([Symbol | RestofList], InitialState) :-
-    transition(InitialState, Symbol, NextState),
-    automatonCheck(RestofList, NextState).</strong>
+<strong>parseDFAHelper([Symbol | _], CurrentState) :-
+    \+ move(CurrentState, _, Symbol),
+    write('Rejected'), nl, !, fail.
 
-We first make the transition to the next state and we check if we are at the end of the string and at the final state, if not we re do the automaton check with the next state and letter and it will end once we get q7 as the final state.
+En el caso de la función recursiva se avanza en la cadena, aplicando la transición correspondiente al siguiente estado.
 
-And at the end we will use this function of recover_automaton so we can input the string as a list and initiate it on the q0 state
+<strong>parseDFAHelper([Symbol | Rest], CurrentState) :-
+    move(CurrentState, NextState, Symbol),
+    parseDFAHelper(Rest, NextState).
 
-<strong>recover_automaton(ListtoCheck) :-
-    automatonCheck(ListtoCheck, q0).</strong>
-
-The complexity for this system is O(n), that is because our regression system needs to go through the n number of letters in the list input, but it goes through them just one time, giving it it's O(n) complexity.
+## Complejidad
+La complejidad del sistema es O(n), ya que cada símbolo de la cadena se procesa una única vez, recorriéndola de manera lineal hasta llegar al estado final.
 
 ## Testing
-The testing for this automaton is written on the file <strong>automaton_test.pl</strong>, but these were the results for it
-![Automaton testing complete](https://github.com/Zathiald/automaton/assets/111139805/aeaa37f4-d924-4965-8690-beae39e9e860)
+Las pruebas del automata estan escritas en el siguiente archivo <strong>TestAutomata.pl</strong>
 
-## Other Implementations
-There are lenguages like Python,Java or Scala that could let me implement different algorithms and test them thoroughly and automatically.
-
-For example Python, in order to implement it, according to Professor Thorsten Altenkirch of the University of Nottingham, python is a more open language in which you need to specify to the file what you are trying to do before even beggining to code. Although there are now python libraries such as automaton, this still need to be defined before starting to program. Here is an example of just the definition for an automaton in python:
-
-``` python
-from automaton import machines
-m = machines.FiniteMachine()
-m.add_state('up')
-m.add_state('down')
-m.add_transition('down', 'up', 'jump')
-m.add_transition('up', 'down', 'fall')
-m.default_start_state = 'down'
-print(m.pformat())
-```
-
-The difference between implementing an automaton between python and prolog is that prolog is designed in order to analyze languages and logic, so using prolog is the most efficient way to secure a good language analysis.
-
-Another option would be to use a Turing machine instead of an automaton, the Stanford Encyclopedia of Philosophy describes Turing machine as "simple abstract computational devices intended to help investigate the extent and limitations of what can be computed."(Stanford Encylopedia, 2018), the main difference between an automaton and a turing machine is that Turing machines are non-limited, meaning that our sequence could grow more and more and not have a limit.
-
-However this turing machines often scalate more and more and for this tipe of problem, which is more simple in comparison, a Turing machine would take more time to analyze and implement, rather than just using an automaton which is simpler and more efficient.
+En caso de probar las cadenas usando la expresion regular, se pueden encontrar en el archivo <strong>Expresionregular.cpp</strong>
+Aqui se desarrollo el programa usando C++ bajo las librerias "redex" y vector", La primera nos ayuda a leer la RE, mientras la segunda nos ayuda para almacenar las diferentes cadenas a validar.
 
 ## References
 
-Academy, E. (2023, August 2). What is the main difference between linear bounded automata and Turing machines? - EITCA Academy. EITCA Academy. https://eitca.org/cybersecurity/eitc-is-cctf-computational-complexity-theory-fundamentals/decidability/linear-bound-automata/examination-review-linear-bound-automata/what-is-the-main-difference-between-linear-bounded-automata-and-turing-machines/ 
+CS154: Introduction to Automata and Complexity Theory. (n.d.). http://infolab.stanford.edu/~ullman/ialc/spr10/spr10.html
 
-Basics of Automata Theory. (n.d.). https://cs.stanford.edu/people/eroberts/courses/soco/projects/2004-05/automata-theory/basics.html
-
-Computerphile. (2023, March 16). Automata & Python - Computerphile [Video]. YouTube. https://www.youtube.com/watch?v=32bC33nJR3A
-
-Examples — automaton 3.3.0.dev12 documentation. (n.d.). https://docs.openstack.org/automaton/latest/user/examples.html 
-
-Turing Machines (Stanford Encyclopedia of Philosophy). (2018, September 24). https://plato.stanford.edu/entries/turing-machine/
-
+Tejedor, J. (2020, September 1). Introducción a expresiones regulares. Acceseo. https://www.acceseo.com/introduccion-a-expresiones-regulares.html
 
 
 
