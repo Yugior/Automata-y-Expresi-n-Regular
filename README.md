@@ -1,18 +1,21 @@
-# E1 Implementation of Lexical Analysis (Automaton and Regular Expression)
-Horacio Villela Hernandez A01712206
+# Implementación de Autómatas y Expresiones Regulares
 
-## Descripcion
-El lenguaje elegiido para la evidencia es uno matematico. a esto se refiere que se puede tener todas las posiblilidades de '0'1'2' con dos reglas claras:
+## Horacio Villela Hernandez A01712206
 
-1. Debe haber un 1 antes de un 2 siempre
-2. Debe de terminar con la secuencia '002'
+## Descripción
 
+El lenguaje elegido para esta evidencia es uno matemático. Se define como un conjunto de cadenas compuestas por los símbolos 0, 1 y 2, con dos reglas claras:
+
+- Debe haber un 1 antes de un 2 siempre.
+- La cadena debe terminar con la secuencia 002.
 
 ## Diseño
 
-En una versión inicial del autómata, algunos estados no tenían transiciones que permitieran continuar el procesamiento de la cadena, lo que resultaba en estados finales sin conexión. Para corregir esto, se implementaron transiciones de bucle al final, permitiendo que el autómata pueda procesar más entradas sin quedar atrapado en estados sin salida.
+En una versión inicial del autómata, algunos estados no tenían transiciones que permitieran continuar el procesamiento de la cadena, lo que resultaba en estados finales sin conexión. Para corregir esto, se implementaron transiciones de bucle al final, permitiendo que el autómata procese más entradas sin quedar atrapado en estados sin salida.
 
-Bocetos Iniciales![Automata evidence 1](BocetosOriginales.png)
+### Bocetos Iniciales
+
+![Automata evidence 1](BocetosOriginales.png)
 
 Pro estas mismas limitantes, el diseño final sigue estas reglas:
 
@@ -47,7 +50,66 @@ El autómata funciona de la siguiente manera:
 
 Y este mismo se representa e implementa de forma exacta en esta expresion regular:
 
-<strong>/^0*1(0|1)*(2(0|1)*(((0*1(0|1))|1(0|1)*)))*002$/gm</strong>
+```
+/^0*1(0|1)*(2(0|1)*(((0*1(0|1))|1(0|1)*)))*002$/gm
+```
+## Implementación
+
+Tras diseñar el autómata, su funcionamiento se tradujo a un archivo en Prolog para realizar pruebas y modificaciones de ser necesario.
+
+Se establecen las relaciones entre los estados usando la estructura:
+
+```prolog
+move(CurrentState, NextState, Symbol).
+```
+
+Y se define el estado de aceptación con:
+
+```prolog
+accepting_state(c).
+```
+
+Para verificar si una cadena es aceptada, se utiliza la función `parseDFA/1`, que primero valida si la entrada termina en 002, y luego llama a la función recursiva `parseDFAHelper/2` para recorrer la cadena símbolo por símbolo:
+
+```prolog
+parseDFA(InputList) :-
+    append(_, [0, 0, 2], InputList),
+    parseDFAHelper(InputList, a).
+```
+
+Casos de la recursión:
+
+- **Caso base:** Si la lista está vacía, verificamos si el estado actual es de aceptación e imprimimos "Accepted":
+
+```prolog
+parseDFAHelper([], CurrentState) :-
+    accepting_state(CurrentState),
+    write('Accepted'), nl.
+```
+
+- **Caso de rechazo inmediato:** Si no existe una transición válida desde el estado actual con el símbolo dado, se rechaza la cadena:
+
+```prolog
+parseDFAHelper([Symbol | _], CurrentState) :-
+    \+ move(CurrentState, _, Symbol),
+    write('Rejected'), nl, !, fail.
+```
+
+- **Caso recursivo:** Se avanza en la cadena, aplicando la transición correspondiente al siguiente estado:
+
+```prolog
+parseDFAHelper([Symbol | Rest], CurrentState) :-
+    move(CurrentState, NextState, Symbol),
+    parseDFAHelper(Rest, NextState).
+```
+
+## Complejidad
+
+La complejidad del sistema es **O(n)**, ya que cada símbolo de la cadena se procesa una única vez, recorriéndola de manera lineal hasta llegar al estado final.
+
+## Testing
+
+Las pruebas del autómata están escritas en el archivo `TestAutomata.pl`. Si se desean probar cadenas usando la expresión regular, se pueden encontrar en el archivo `ExpresionRegular.cpp`. Este programa fue desarrollado en C++ utilizando las bibliotecas **regex** y **vector**. La primera permite evaluar la expresión regular, mientras que la segunda almacena las diferentes cadenas a validar.
 
 ## Implementacion
 Después de diseñar el autómata, se debe traducir su funcionamiento a un archivo en Prolog para poder probarlo y modificarlo de ser necesario.
