@@ -111,48 +111,6 @@ La complejidad del sistema es **O(n)**, ya que cada símbolo de la cadena se pro
 
 Las pruebas del autómata están escritas en el archivo `TestAutomata.pl`. Si se desean probar cadenas usando la expresión regular, se pueden encontrar en el archivo `ExpresionRegular.cpp`. Este programa fue desarrollado en C++ utilizando las bibliotecas **regex** y **vector**. La primera permite evaluar la expresión regular, mientras que la segunda almacena las diferentes cadenas a validar.
 
-## Implementacion
-Después de diseñar el autómata, se debe traducir su funcionamiento a un archivo en Prolog para poder probarlo y modificarlo de ser necesario.
-
-Con esto dicho, se establecen las relaciones entre los estados usando el siguiente formato:
-<strong>move(CurrentState,NextState,Symbol)</strong>
-
-Y después de definir todas las transiciones, debemos indicar cuál es el estado de aceptación utilizando la siguiente regla:
-<strong>accepting_state(c)</strong>
-
-Para verificar si una cadena es aceptada, se utiliza la función parseDFA/1, que primero valida si la entrada termina en "002", y luego llama a la función recursiva parseDFAHelper/2 para recorrer la cadena símbolo por símbolo:
-
-<strong>parseDFA(InputList) :-
-    append(_, [0, 0, 2], InputList),
-    parseDFAHelper(InputList, a)</strong>
-
-En el caso base; si la lista está vacía, verificamos si el estado actual es de aceptación e imprimimos <strong>"Accepted</strong>
-
-<strong>parseDFAHelper([], CurrentState) :-
-    accepting_state(CurrentState),
-    write('Accepted'), nl.
-    
-Por otro lado en el caso de rechazo inmediato; si no existe una transición válida desde el estado actual con el símbolo dado, se rechaza la cadena.
-
-<strong>parseDFAHelper([Symbol | _], CurrentState) :-
-    \+ move(CurrentState, _, Symbol),
-    write('Rejected'), nl, !, fail.
-
-En el caso de la función recursiva se avanza en la cadena, aplicando la transición correspondiente al siguiente estado.
-
-<strong>parseDFAHelper([Symbol | Rest], CurrentState) :-
-    move(CurrentState, NextState, Symbol),
-    parseDFAHelper(Rest, NextState).
-
-## Complejidad
-La complejidad del sistema es O(n), ya que cada símbolo de la cadena se procesa una única vez, recorriéndola de manera lineal hasta llegar al estado final.
-
-## Testing
-Las pruebas del automata estan escritas en el siguiente archivo <strong>TestAutomata.pl</strong>
-
-En caso de probar las cadenas usando la expresion regular, se pueden encontrar en el archivo <strong>Expresionregular.cpp</strong>
-Aqui se desarrollo el programa usando C++ bajo las librerias "redex" y vector", La primera nos ayuda a leer la RE, mientras la segunda nos ayuda para almacenar las diferentes cadenas a validar.
-
 ## References
 
 CS154: Introduction to Automata and Complexity Theory. (n.d.). http://infolab.stanford.edu/~ullman/ialc/spr10/spr10.html
