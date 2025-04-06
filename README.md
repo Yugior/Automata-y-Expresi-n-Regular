@@ -1,75 +1,86 @@
-# Implementación de Autómatas y Expresiones Regulares
 
-## Horacio Villela Hernandez A01712206
+#  Implementación de Autómatas y Expresiones Regulares
 
-## Descripción
+## Horacio Villela Hernández  
+## A01712206  
+## 23/03/2025  
 
-El lenguaje elegido para esta evidencia es uno matemático. Se define como un conjunto de cadenas compuestas por los símbolos 0, 1 y 2, con dos reglas claras:
+---
 
-- Debe haber un 1 antes de un 2 siempre.
-- La cadena debe terminar con la secuencia 002.
+##  Descripción
 
-## Diseño
+Este proyecto aborda la implementación de un **autómata finito determinista (DFA)** y su correspondiente **expresión regular** para reconocer un lenguaje específico compuesto por los símbolos **0, 1 y 2**.
 
-En una versión inicial del autómata, algunos estados no tenían transiciones que permitieran continuar el procesamiento de la cadena, lo que resultaba en estados finales sin conexión. Para corregir esto, se implementaron transiciones de bucle al final, permitiendo que el autómata procese más entradas sin quedar atrapado en estados sin salida.
+El lenguaje definido cumple con las siguientes reglas:
 
-### Bocetos Iniciales
+- Debe existir al menos un **1 antes de cualquier 2** en la cadena.
+- La cadena **debe finalizar con la secuencia "002"** para ser aceptada.
+
+---
+
+##  Diseño del Autómata
+
+En una primera versión del diseño, algunos estados carecían de transiciones de salida, lo cual generaba situaciones de bloqueo. Esto fue solucionado agregando **transiciones de bucle**, permitiendo mayor fluidez en el procesamiento de entradas válidas.
+
+###  Bocetos Iniciales
 
 ![Automata evidence 1](BocetosOriginales.png)
 
-Pro estas mismas limitantes, el diseño final sigue estas reglas:
+###  Reglas del diseño final:
 
-1. Siempre debe haber un 1 antes de un 2 en la cadena.
+1. Siempre debe haber al menos un `1` **antes** de cualquier `2`.
+2. La cadena debe **terminar en "002"**.
+3. El autómata utiliza **tres estados**:
 
-2. La cadena debe terminar en "002" para ser aceptada.
+   - **A** (estado inicial): acepta ceros y espera el primer uno.
+   - **B**: reconoce que se encontró al menos un uno.
+   - **C** (estado de aceptación): se alcanza únicamente si la cadena finaliza con `002`.
 
-3. Se utilizan tres estados:
+###  Tabla de transiciones
 
-    A. (estado inicial), que permite la recepción de ceros y espera la llegada de un 1.
+| Estado Inicial | Símbolo | Estado Final |
+|----------------|---------|--------------|
+| A              | 0       | A            |
+| A              | 1       | B            |
+| B              | 0       | B            |
+| B              | 1       | B            |
+| B              | 2       | C            |
+| C              | 0       | A            |
+| C              | 1       | B            |
 
-    B.  que indica que se ha encontrado un 1 y gestiona la aparición del 2.
+---
 
-    C. (estado de aceptación), que solo se alcanza si la cadena termina en "002".
+##  Expresión regular equivalente
 
-![Automata evidence 1](Automata.png)
+El comportamiento del autómata fue representado también mediante la siguiente **expresión regular** en C++:
 
-Al agregar bucles en el estado final y asegurar transiciones adecuadas, el autómata ahora es capaz de procesar correctamente todas las cadenas que cumplen con las reglas del lenguaje.
-
-El autómata funciona de la siguiente manera:
-
-| Estado Inicial | Input | Estdo Final|
-| -------------- | ------| -----------|
-| A             | 0     | A           |
-| A             | 1     | B           |
-| B             | 0     | B           |
-| B             | 1     | B           |
-| B             | 2     | C           |
-| C             | 0     | A           |
-| C             | 1     | B           |
-
-
-Y este mismo se representa e implementa de forma exacta en esta expresion regular:
-
-```
+```regex
 /^0*1(0|1)*(2(0|1)*(((0*1(0|1))|1(0|1)*)))*002$/gm
 ```
-## Implementación
 
-Tras diseñar el autómata, su funcionamiento se tradujo a un archivo en Prolog para realizar pruebas y modificaciones de ser necesario.
+Esta expresión reconoce exactamente las cadenas válidas bajo las reglas descritas anteriormente.
 
-Se establecen las relaciones entre los estados usando la estructura:
+---
 
-```prolog
-move(CurrentState, NextState, Symbol).
-```
+##  Implementación en Prolog
 
-Y se define el estado de aceptación con:
+El autómata fue codificado en **Prolog**. Se utilizaron hechos `move/3` para representar las transiciones, y un predicado `accepting_state/1` para identificar el estado de aceptación:
 
 ```prolog
+% Transiciones del autómata
+move(a, a, 0).
+move(a, b, 1).
+move(b, b, 0).
+move(b, b, 1).
+move(b, c, 2).
+move(c, a, 0).
+move(c, b, 1).
+
+% Estado de aceptación
 accepting_state(c).
 ```
 
-Para verificar si una cadena es aceptada, se utiliza la función `parseDFA/1`, que primero valida si la entrada termina en 002, y luego llama a la función recursiva `parseDFAHelper/2` para recorrer la cadena símbolo por símbolo:
+La lógica de verificación se implementó mediante una función principal `parseDFA/1` que revisa si la entrada termina con `002`, y luego llama a un **procesador recursivo**:
 
 ```prolog
 parseDFA(InputList) :-
@@ -77,45 +88,68 @@ parseDFA(InputList) :-
     parseDFAHelper(InputList, a).
 ```
 
-Casos de la recursión:
+### 📌 Casos evaluados
 
-- **Caso base:** Si la lista está vacía, verificamos si el estado actual es de aceptación e imprimimos "Accepted":
+-  Caso base: lista vacía y estado actual es de aceptación.
+-  Rechazo inmediato: si no hay transición válida desde el estado actual.
+-  Recursión: transición válida hacia el siguiente estado.
 
-```prolog
-parseDFAHelper([], CurrentState) :-
-    accepting_state(CurrentState),
-    write('Accepted'), nl.
+---
+
+## ⏱️ Complejidad
+
+- **Temporal**: `O(n)` — se procesa cada símbolo una vez, sin retroceso.
+- **Espacial**: `O(n)` — por el uso de recursión.
+
+En el caso de la expresión regular en C++, **`regex_match()` puede alcanzar O(n²)** en el peor caso debido a retrocesos causados por estructuras anidadas.
+
+---
+
+##  Pruebas
+
+Se realizaron pruebas utilizando dos implementaciones:
+
+### En **Prolog**:  
+Archivo `Automata.pl` prueba directamente la lógica del autómata paso a paso.
+
+### En **C++**:  
+Archivo `ExpresionRegular.cpp` valida cadenas usando la expresión regular con una lista de pruebas:
+
+```cpp
+vector<string> pruebas = {
+  //  Casos que deben ser rechazados
+  "2010202002", "12121211010102001210200000002",
+  //  Casos aceptados
+  "10001021201011211100021002", "1002", "1021002"
+};
 ```
 
-- **Caso de rechazo inmediato:** Si no existe una transición válida desde el estado actual con el símbolo dado, se rechaza la cadena:
+Se usaron bibliotecas estándar como:
 
-```prolog
-parseDFAHelper([Symbol | _], CurrentState) :-
-    \+ move(CurrentState, _, Symbol),
-    write('Rejected'), nl, !, fail.
-```
+- `<regex>` para evaluar la expresión regular.
+- `<vector>` para almacenar múltiples entradas de prueba.
 
-- **Caso recursivo:** Se avanza en la cadena, aplicando la transición correspondiente al siguiente estado:
+---
 
-```prolog
-parseDFAHelper([Symbol | Rest], CurrentState) :-
-    move(CurrentState, NextState, Symbol),
-    parseDFAHelper(Rest, NextState).
-```
+##  Comentarios añadidos a los archivos
 
-## Complejidad
+###  `ExpresionRegular.cpp`
+- Comentarios explicativos sobre el propósito de cada parte.
+- Análisis de la expresión regular.
+- Tiempo de ejecución estimado para la evaluación: **O(n²)** en el peor caso.
 
-La complejidad del sistema es **O(n)**, ya que cada símbolo de la cadena se procesa una única vez, recorriéndola de manera lineal hasta llegar al estado final.
+###  `Automata.pl`
+- Comentarios detallando las reglas de transición y propósito de cada predicado.
+- Análisis de complejidad: **O(n)** por recorrido lineal sin ciclos redundantes.
+- Inclusión de condiciones de aceptación y rechazo.
 
-## Testing
+---
 
-Las pruebas del autómata están escritas en el archivo `TestAutomata.pl`. Si se desean probar cadenas usando la expresión regular, se pueden encontrar en el archivo `ExpresionRegular.cpp`. Este programa fue desarrollado en C++ utilizando las bibliotecas **regex** y **vector**. La primera permite evaluar la expresión regular, mientras que la segunda almacena las diferentes cadenas a validar.
+##  Referencias
 
-## References
+- Ullman, J. *CS154: Introduction to Automata and Complexity Theory*. Stanford. http://infolab.stanford.edu/~ullman/ialc/spr10/spr10.html  
+- Tejedor, J. (2020). *Introducción a expresiones regulares*. Acceseo. https://www.acceseo.com/introduccion-a-expresiones-regulares.html
 
-CS154: Introduction to Automata and Complexity Theory. (n.d.). http://infolab.stanford.edu/~ullman/ialc/spr10/spr10.html
-
-Tejedor, J. (2020, September 1). Introducción a expresiones regulares. Acceseo. https://www.acceseo.com/introduccion-a-expresiones-regulares.html
 
 
 
