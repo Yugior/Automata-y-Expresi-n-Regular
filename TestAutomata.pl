@@ -14,7 +14,7 @@ Accepted.
 Rejected.
 
 ?- parseDFA([1,0,0,2]).  
-Accepted.
+Rejected.
 
 ?- parseDFA([1,1,1,0,0,2]).  
 Accepted.
