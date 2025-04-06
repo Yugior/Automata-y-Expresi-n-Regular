@@ -1,5 +1,11 @@
-%Horacio Villela Hernandez A01712206 23/03/2025 
-% Definimos las transiciones del autómata
+% Horacio Villela Hernández A01712206 - 23/03/2025  Actualizacion 05/04/2025
+
+
+% Modelo de Autómata Finito Determinista (DFA)
+
+
+% Definimos las transiciones del autómata en forma:
+% move(EstadoActual, EstadoSiguiente, Símbolo)
 move(a, a, 0).
 move(a, b, 1).
 move(b, b, 0).
@@ -8,26 +14,40 @@ move(b, c, 2).
 move(c, a, 0).
 move(c, b, 1).
 
-% Estado de aceptación: la cadena debe terminar en "002"
+% Definimos el estado de aceptación: el autómata acepta si termina en el estado c
 accepting_state(c).
 
-% Función principal para evaluar si una cadena es aceptada por el autómata
-parseDFA(InputList) :-
-    append(_, [0, 0, 2], InputList), % Verifica que termine en "002"
-    parseDFAHelper(InputList, a).
+% ----------------------------------------
+% Función principal: parseDFA/1
+% Verifica si una cadena (lista de símbolos) es aceptada por el autómata
+% Condición adicional: debe terminar con los símbolos [0, 0, 2]
+%
+% Complejidad temporal: O(n)
+% - Cada símbolo de la lista se recorre una sola vez
+% - Las búsquedas de transición (move/3) son constantes si hay pocos estados
+% ----------------------------------------
 
-% Caso base: si la lista está vacía, verificamos si el estado actual es de aceptación
+parseDFA(InputList) :-
+    append(_, [0, 0, 2], InputList),  % Verifica que la cadena termine con [0, 0, 2]
+    parseDFAHelper(InputList, a).     % Inicia el DFA en el estado 'a'
+
+% ----------------------------------------
+% Caso base: lista vacía -> verificar estado de aceptación
+% ----------------------------------------
 parseDFAHelper([], CurrentState) :-
     accepting_state(CurrentState),
     write('Accepted'), nl.
 
-% Caso de rechazo inmediato si no hay una transición válida
+% ----------------------------------------
+% Caso de rechazo: si no hay transición válida con el símbolo actual
+% ----------------------------------------
 parseDFAHelper([Symbol | _], CurrentState) :-
-    \+ move(CurrentState, _, Symbol),
+    \+ move(CurrentState, _, Symbol),  % No existe transición válida
     write('Rejected'), nl, !, fail.
 
-% Caso recursivo: avanzamos en la cadena verificando las transiciones
+% ----------------------------------------
+% Caso recursivo: aplicar la transición y continuar
+% ----------------------------------------
 parseDFAHelper([Symbol | Rest], CurrentState) :-
     move(CurrentState, NextState, Symbol),
     parseDFAHelper(Rest, NextState).
-
