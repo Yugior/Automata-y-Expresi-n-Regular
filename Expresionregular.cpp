@@ -52,7 +52,8 @@ int main() {
         "111002",
         "12002", //CASO DE PRUEBA RECHAZADO ANTERIORMENTE EN REVISION
         "1021002",
-        "000000000010000000002"
+        "000000000010000000002",
+        "1002002"
     };
 
     // Evaluar y mostrar resultados
