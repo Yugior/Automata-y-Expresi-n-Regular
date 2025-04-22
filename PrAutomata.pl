@@ -1,53 +1,61 @@
-% Horacio Villela Hernández A01712206 - 23/03/2025  Actualizacion 05/04/2025
-
-
-% Modelo de Autómata Finito Determinista (DFA)
-
-
-% Definimos las transiciones del autómata en forma:
-% move(EstadoActual, EstadoSiguiente, Símbolo)
-move(a, a, 0).
-move(a, b, 1).
-move(b, b, 0).
-move(b, b, 1).
-move(b, c, 2).
-move(c, a, 0).
-move(c, b, 1).
-
-% Definimos el estado de aceptación: el autómata acepta si termina en el estado c
-accepting_state(c).
+% Horacio Villela Hernández A01712206 - 21/04/2025
+% Autómata Finito Determinista (AFD)
+% Reglas:
+% - Cadena compuesta por símbolos {0, 1, 2}
+% - Siempre debe haber un 1 antes que un 2
+% - Debe terminar en [0, 0, 2]
 
 % ----------------------------------------
-% Función principal: parseDFA/1
-% Verifica si una cadena (lista de símbolos) es aceptada por el autómata
-% Condición adicional: debe terminar con los símbolos [0, 0, 2]
-%
-% Complejidad temporal: O(n)
-% - Cada símbolo de la lista se recorre una sola vez
-% - Las búsquedas de transición (move/3) son constantes si hay pocos estados
+% Transiciones: transicion(EstadoActual, EstadoSiguiente, Simbolo)
 % ----------------------------------------
 
-parseDFA(InputList) :-
-    append(_, [0, 0, 2], InputList),  % Verifica que la cadena termine con [0, 0, 2]
-    parseDFAHelper(InputList, a).     % Inicia el DFA en el estado 'a'
+transicion(q0, q0, 0).
+transicion(q0, q1, 1).
+
+transicion(q1, q1, 1).
+transicion(q1, q1, 2).
+transicion(q1, q2, 0).
+
+transicion(q2, q1, 1).
+transicion(q2, q1, 2).
+transicion(q2, q3, 0).
+
+transicion(q3, q1, 1).
+transicion(q3, q4, 2).
+transicion(q3, q3, 0).
+
+% Estado de aceptación
+estado_final(q4).
 
 % ----------------------------------------
-% Caso base: lista vacía -> verificar estado de aceptación
+% aceptar/1
+% Verifica si una cadena (lista de símbolos) es aceptada por el AFD
+% Condiciones:
+% - Termina en [0, 0, 2]
+% - Sigue transiciones válidas
 % ----------------------------------------
-parseDFAHelper([], CurrentState) :-
-    accepting_state(CurrentState),
-    write('Accepted'), nl.
+
+aceptar(Cadena) :-
+    append(_, [0, 0, 2], Cadena),   % Verifica que termine en 002
+    procesar(Cadena, q0).          % Inicia desde el estado q0
 
 % ----------------------------------------
-% Caso de rechazo: si no hay transición válida con el símbolo actual
+% Caso base: cadena vacía y estado final
 % ----------------------------------------
-parseDFAHelper([Symbol | _], CurrentState) :-
-    \+ move(CurrentState, _, Symbol),  % No existe transición válida
-    write('Rejected'), nl, !, fail.
+procesar([], EstadoActual) :-
+    estado_final(EstadoActual),
+    write('Aceptada'), nl.
 
 % ----------------------------------------
-% Caso recursivo: aplicar la transición y continuar
+% Rechazo si no hay transición válida
 % ----------------------------------------
-parseDFAHelper([Symbol | Rest], CurrentState) :-
-    move(CurrentState, NextState, Symbol),
-    parseDFAHelper(Rest, NextState).
+procesar([Simbolo | _], EstadoActual) :-
+    \+ transicion(EstadoActual, _, Simbolo),
+    write('Rechazada: transición inválida'), nl, !, fail.
+
+% ----------------------------------------
+% Caso recursivo: aplicar transición y continuar
+% ----------------------------------------
+procesar([Simbolo | Resto], EstadoActual) :-
+    transicion(EstadoActual, SiguienteEstado, Simbolo),
+    procesar(Resto, SiguienteEstado).
