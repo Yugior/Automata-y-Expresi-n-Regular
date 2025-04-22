@@ -24,6 +24,11 @@ transicion(q3, q1, 1).
 transicion(q3, q4, 2).
 transicion(q3, q3, 0).
 
+% Desde q4, podemos continuar procesando más símbolos
+transicion(q4, q1, 1).  % si aparece un 1, volvemos a q1
+transicion(q4, q2, 0).  % si aparece un 0, pasamos a q2
+transicion(q4, q1, 2).  % si aparece un 2, seguimos en q1 (ya hay un 1 previo)
+
 % Estado de aceptación
 estado_final(q4).
 
