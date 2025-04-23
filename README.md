@@ -24,7 +24,7 @@ Durante el desarrollo, se identificaron casos donde la cadena contenía `002` pe
 
 ### Imagen del autómata actualizado
 
-![Automata evidence 2](Automata2.0.png)
+![Automata evidence 2](Automata2.0.jpg)
 
 ### Reglas del diseño final:
 
